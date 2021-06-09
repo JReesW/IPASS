@@ -12,7 +12,7 @@ class WeightedPattern:
 
     # Get a specific weight via square bracket indexing, according to definition 1 of the paper
     def __getitem__(self, item: Tuple[int, object]) -> float:
-        return self.matrix[item[1]][item[0]]
+        return self.matrix[item[1]][item[0] - 1]
 
     # Returns the score of a given pattern, according to definition 2 of the paper
     def score(self, pattern: List[object]) -> float:
@@ -20,7 +20,7 @@ class WeightedPattern:
         for c, p in enumerate(pattern):
             if c >= self.length:
                 break
-            result += self[c, p]
+            result += self[c + 1, p]
         return result
 
 
