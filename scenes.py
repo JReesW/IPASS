@@ -88,6 +88,17 @@ class TestScene(Scene):
         self.buttons = [
             Button(pygame.Rect(100, 400, 300, 30), "Return", [self.switch], [MenuScene])
         ]
+        self.textbox = TextBox(pygame.Rect(50, 50, 400, 30))
+
+    def handle_events(self, events):
+        super().handle_events(events)
+
+        self.textbox.handle_events(events)
+
+    def render(self, surface):
+        super().render(surface)
+
+        surface.blit(self.textbox.render(), self.textbox.rect.topleft)
 
 
 class Fader(Scene):                         # Handles fading in and out between scenes

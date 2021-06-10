@@ -41,3 +41,40 @@ class Button:
         surface.blit(text, (surface.get_width() // 2 - rect.width // 2, 10))
 
         return surface
+
+
+class TextBox:
+    def __init__(self, rect):
+        self.rect = rect
+        self.text = ""
+        self.active = False
+
+    def render(self):
+        surface = pygame.Surface(self.rect.size)
+
+        # Background and border
+        bordercolor = (180, 140, 255) if self.active else (20, 20, 20)
+        pygame.draw.rect(surface, (220, 220, 220), pygame.Rect(1, 1, self.rect.width - 2, self.rect.height - 2), 0)
+        pygame.draw.rect(surface, bordercolor, pygame.Rect(0, 0, self.rect.width - 1, self.rect.height - 1), 2)
+
+        # Text
+        text, rect = regularfont.render(self.text, (0, 0, 0))
+        surface.blit(text, (10, 10))
+
+        return surface
+
+    def handle_events(self, events):
+        mousepos = pygame.mouse.get_pos()
+
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONUP:
+                self.active =  self.rect.collidepoint(mousepos)
+
+            if event.type == pygame.KEYDOWN:
+                if self.active:
+                    if event.key == pygame.K_RETURN:
+                        self.active = False
+                    elif event.key == pygame.K_BACKSPACE:
+                        self.text = self.text[:-1]
+                    else:
+                        self.text += event.unicode

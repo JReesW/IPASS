@@ -1,8 +1,12 @@
 import pygame
 import pygame.freetype
 import sys
+import os
 
 import scenes
+
+
+os.environ['SDL_VIDEO_WINDOW_POS'] = '%d,%d' % (0, 20)
 
 
 if __name__ == "__main__":
