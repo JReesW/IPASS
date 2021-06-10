@@ -13,7 +13,7 @@ class Button:
     def __init__(self, rect, text, funcs, args):
         self.rect = rect
         self.text = text
-        self.color = (0, 0, 0)
+        self.color = (40, 40, 40)
         self.bordercolor = (255, 255, 0)
         self.textcolor = (255, 255, 0)
         self.funcs = funcs
@@ -23,10 +23,10 @@ class Button:
     def hover(self, mousepos):
         if self.rect.collidepoint(mousepos):
             # Become darker when mouse is hovering over button
-            self.color = tuple([self.color[i] - 2 if self.color[i] > 0 else self.color[i] for i in range(3)])
+            self.color = tuple([self.color[i] - 2 if self.color[i] > 20 else self.color[i] for i in range(3)])
         else:
             # Become lighter when no mouse is hovering over button
-            self.color = tuple([self.color[i] + 2 if self.color[i] < 20 else self.color[i] for i in range(3)])
+            self.color = tuple([self.color[i] + 2 if self.color[i] < 40 else self.color[i] for i in range(3)])
 
     # Draw the button
     def render(self):
@@ -48,6 +48,7 @@ class TextBox:
         self.rect = rect
         self.text = ""
         self.active = False
+        self.buffer = 0
 
     def render(self):
         surface = pygame.Surface(self.rect.size)
@@ -74,7 +75,16 @@ class TextBox:
                 if self.active:
                     if event.key == pygame.K_RETURN:
                         self.active = False
-                    elif event.key == pygame.K_BACKSPACE:
-                        self.text = self.text[:-1]
-                    else:
+                    elif event.key != pygame.K_BACKSPACE:
                         self.text += event.unicode
+
+        if pygame.key.get_pressed()[pygame.K_BACKSPACE]:
+            if self.buffer == 0:
+                self.text = self.text[:-1]
+                self.buffer = 1
+            else:
+                self.buffer += 1
+                if self.buffer > 40 and self.buffer % 3 == 0:
+                    self.text = self.text[:-1]
+        else:
+            self.buffer = 0

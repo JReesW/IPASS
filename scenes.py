@@ -48,7 +48,7 @@ class Scene:
 
     def render(self, surface):
         # Clear screen
-        surface.fill((0, 0, 0))
+        surface.fill((40, 40, 40))
 
         # Button rendering
         for button in self.buttons:
@@ -65,7 +65,9 @@ class MenuScene(Scene):
     def __init__(self):
         super().__init__()
         self.buttons = [
-            Button(pygame.Rect(100, 400, 300, 30), "Test", [self.switch], [TestScene]),
+            Button(pygame.Rect(100, 300, 300, 30), "Predict Enjoyment", [self.switch], [PredictorScene]),
+            Button(pygame.Rect(100, 400, 300, 30), "P-Value", [self.switch], [PValueScene]),
+            Button(pygame.Rect(100, 500, 300, 30), "Rate People", [self.switch], [RateScene]),
             Button(pygame.Rect(100, 600, 300, 30), "Quit", [pygame.quit, sys.exit], [])
         ]
 
@@ -82,13 +84,13 @@ class MenuScene(Scene):
         surface.blit(text, (50, 100))
 
 
-class TestScene(Scene):
+class PredictorScene(Scene):
     def __init__(self):
         super().__init__()
         self.buttons = [
-            Button(pygame.Rect(100, 400, 300, 30), "Return", [self.switch], [MenuScene])
+            Button(pygame.Rect(100, 600, 300, 30), "Return", [self.switch], [MenuScene])
         ]
-        self.textbox = TextBox(pygame.Rect(50, 50, 400, 30))
+        self.textbox = TextBox(pygame.Rect(50, 150, 400, 30))
 
     def handle_events(self, events):
         super().handle_events(events)
@@ -99,6 +101,75 @@ class TestScene(Scene):
         super().render(surface)
 
         surface.blit(self.textbox.render(), self.textbox.rect.topleft)
+
+        text, rect = titlefont.render("Predict Enjoyment", (255, 255, 0))
+        surface.blit(text, (40, 40))
+
+
+class PValueScene(Scene):
+    def __init__(self):
+        super().__init__()
+        self.buttons = [
+            Button(pygame.Rect(100, 600, 300, 30), "Return", [self.switch], [MenuScene])
+        ]
+        self.textbox = TextBox(pygame.Rect(50, 150, 400, 30))
+
+    def handle_events(self, events):
+        super().handle_events(events)
+
+        self.textbox.handle_events(events)
+
+    def render(self, surface):
+        super().render(surface)
+
+        surface.blit(self.textbox.render(), self.textbox.rect.topleft)
+
+        text, rect = titlefont.render("P-Value Mode", (255, 255, 0))
+        surface.blit(text, (40, 40))
+
+
+class RateScene(Scene):
+    def __init__(self):
+        super().__init__()
+        self.buttons = [
+            Button(pygame.Rect(100, 600, 300, 30), "Return", [self.switch], [MenuScene])
+        ]
+        self.textbox = TextBox(pygame.Rect(50, 150, 400, 30))
+
+    def handle_events(self, events):
+        super().handle_events(events)
+
+        self.textbox.handle_events(events)
+
+    def render(self, surface):
+        super().render(surface)
+
+        surface.blit(self.textbox.render(), self.textbox.rect.topleft)
+
+        text, rect = titlefont.render("Rate People", (255, 255, 0))
+        surface.blit(text, (40, 40))
+
+
+class InfoScene(Scene):
+    def __init__(self):
+        super().__init__()
+        self.buttons = [
+            Button(pygame.Rect(100, 600, 300, 30), "Return", [self.switch], [MenuScene])
+        ]
+        self.textbox = TextBox(pygame.Rect(50, 150, 400, 30))
+
+    def handle_events(self, events):
+        super().handle_events(events)
+
+        self.textbox.handle_events(events)
+
+    def render(self, surface):
+        super().render(surface)
+
+        surface.blit(self.textbox.render(), self.textbox.rect.topleft)
+
+        text, rect = titlefont.render("Info", (255, 255, 0))
+        surface.blit(text, (40, 40))
 
 
 class Fader(Scene):                         # Handles fading in and out between scenes
@@ -125,6 +196,6 @@ class Fader(Scene):                         # Handles fading in and out between 
 
     def render(self, surface):
         self.current.render(surface)
-        pygame.draw.rect(self.veil, (0, 0, 0), surface.get_rect())
+        pygame.draw.rect(self.veil, (20, 20, 20), surface.get_rect())
         self.veil.set_alpha(self.fade)
         surface.blit(self.veil, (0, 0))
