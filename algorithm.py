@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 
 class WeightedPattern:
@@ -11,7 +11,10 @@ class WeightedPattern:
         self.matrix[data] = generate_row(data.scores, self.length)
 
     # Get a specific weight via square bracket indexing, according to definition 1 of the paper
-    def __getitem__(self, item: Tuple[int, object]) -> float:
+    # Or get a segment of the entire matrix using slice indexing, as used in definition 4 of the paper
+    def __getitem__(self, item: Tuple[int, object]) -> Union[dict, float]:
+        if isinstance(item, slice):
+            return self.slice(item)
         return self.matrix[item[1]][item[0] - 1]
 
     # Returns the score of a given pattern, according to definition 2 of the paper
@@ -22,6 +25,10 @@ class WeightedPattern:
                 break
             result += self[c + 1, p]
         return result
+
+    def slice(self, segment):
+        start, stop = segment.start, segment.stop
+        return {obj: scores[start:stop + 1] for obj, scores in self.matrix.items()}
 
 
 class DataEntry:
