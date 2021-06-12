@@ -1,5 +1,6 @@
 from typing import Tuple, List, Union
 from copy import copy
+import data
 
 
 class WeightedPattern:
@@ -8,8 +9,8 @@ class WeightedPattern:
         self.matrix = {}
 
     # Add a new row for a given data entry
-    def add_row(self, data: object) -> None:
-        self.matrix[data] = generate_row(data.scores, self.length)
+    def add_row(self, info: object) -> None:
+        self.matrix[info] = generate_row(info.scores, self.length)
 
     # Get a specific weight via square bracket indexing, according to definition 1 of the paper
     # Or get a segment of the entire matrix using slice indexing, as used in definition 4 of the paper
@@ -50,45 +51,32 @@ class WeightedPattern:
         return sum([self[1:i-1].pvalue(threshold - self[i, c]) for c in sigma]) / delta
 
 
-
-
-class DataEntry:
-    def __init__(self, id_: int, name: str, scores) -> None:
-        self.id = id_
-        self.name = name
-        self.scores = scores
-
-    # Makes this object hashable, so it can be used as a dictionary key
-    def __hash__(self) -> int:
-        return hash(self.id)
-
-
 # TEMPORARY
 def generate_row(scores: float, length: int) -> List[float]:
     return [scores - e for e in range(length)]
 
 
 # TEST VALUES
-data1 = DataEntry(1234, "Jeff", 8)
-data2 = DataEntry(1235, "Mike", 4)
-data3 = DataEntry(1236, "Tim", 9)
-data4 = DataEntry(1237, "Tom", 2)
-data5 = DataEntry(1238, "Rich", 4)
-data6 = DataEntry(1239, "Jake", 2)
-
-test = WeightedPattern(6)
-
-test.add_row(data1)
-test.add_row(data2)
-test.add_row(data3)
-test.add_row(data4)
-test.add_row(data5)
-test.add_row(data6)
-
-test2 = test[1:3]
-print(test.matrix[data4])
-print(test2.matrix[data4])
-print(len(test))
-print(len(test2))
-
-print(test.pvalue(20))
+# data1 = DataEntry(1234, "Jeff", 8)
+# data2 = DataEntry(1235, "Mike", 4)
+# data3 = DataEntry(1236, "Tim", 9)
+# data4 = DataEntry(1237, "Tom", 2)
+# data5 = DataEntry(1238, "Rich", 4)
+# data6 = DataEntry(1239, "Jake", 2)
+#
+# test = WeightedPattern(6)
+#
+# test.add_row(data1)
+# test.add_row(data2)
+# test.add_row(data3)
+# test.add_row(data4)
+# test.add_row(data5)
+# test.add_row(data6)
+#
+# test2 = test[1:3]
+# print(test.matrix[data4])
+# print(test2.matrix[data4])
+# print(len(test))
+# print(len(test2))
+#
+# print(test.pvalue(20))
