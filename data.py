@@ -16,6 +16,13 @@ class Movie(Entry):
         self.cast = movie.get('cast')
         self.scores = 0.0
 
+    def basic_info(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'info': "movie info here :)"
+        }
+
 
 class Person(Entry):
     def __init__(self, person):
@@ -23,6 +30,13 @@ class Person(Entry):
         self.name = person['name']
         self.biography = person['biography']
         self.scores = 0.0
+
+    def basic_info(self):
+        return {
+            'id': self.id,
+            'title': self.name,
+            'info': "person info here ;D"
+        }
 
 
 def get_movie(id_: str) -> object:
