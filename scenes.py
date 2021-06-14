@@ -25,23 +25,27 @@ class Scene:
     def __init__(self):
         # Scenes initially have no director
         self.director = None
+        self.ui = []
 
     def handle_events(self, events):
         # Get the position of the mouse on the game
-        mousepos = pygame.mouse.get_pos()
+        # mousepos = pygame.mouse.get_pos()
+        #
+        # # Each scene is dealing with buttons, so the button handling is done here
+        # # Handle mouse hover over buttons
+        # for button in self.buttons:
+        #     button.hover(mousepos)
+        #
+        # # Handle button click
+        # for event in events:
+        #     if event.type == pygame.MOUSEBUTTONUP:
+        #         for button in self.buttons:
+        #             if button.rect.collidepoint(mousepos):
+        #                 for func in button.funcs:
+        #                     func(*button.args)
 
-        # Each scene is dealing with buttons, so the button handling is done here
-        # Handle mouse hover over buttons
-        for button in self.buttons:
-            button.hover(mousepos)
-
-        # Handle button click
-        for event in events:
-            if event.type == pygame.MOUSEBUTTONUP:
-                for button in self.buttons:
-                    if button.rect.collidepoint(mousepos):
-                        for func in button.funcs:
-                            func(*button.args)
+        for element in self.ui:
+            element.handle_events(events)
 
     def update(self):
         pass
@@ -50,25 +54,29 @@ class Scene:
         # Clear screen
         surface.fill((40, 40, 40))
 
-        # Button rendering
-        for button in self.buttons:
-            surface.blit(button.render(), button.rect.topleft)
+        # UI element rendering
+        for element in self.ui:
+            surface.blit(element.render(), element.rect.topleft)
 
     # Used for switching to another scene, can be called by buttons.
     def switch(self, scene, args=None):
         args = [] if args is None else args
         self.director.switch(Fader(self, scene(*args)))
 
+    @staticmethod
+    def execute(func, args):
+        func(*args)
+
 
 # The class representing the main menu
 class MenuScene(Scene):
     def __init__(self):
         super().__init__()
-        self.buttons = [
-            Button(pygame.Rect(100, 300, 300, 30), "Predict Enjoyment", [self.switch], [PredictorScene]),
-            Button(pygame.Rect(100, 400, 300, 30), "P-Value", [self.switch], [PValueScene]),
-            Button(pygame.Rect(100, 500, 300, 30), "Rate People", [self.switch], [RateScene]),
-            Button(pygame.Rect(100, 600, 300, 30), "Quit", [pygame.quit, sys.exit], [])
+        self.ui = [
+            Button(pygame.Rect(100, 300, 300, 30), "Predict Enjoyment", [self.switch], [PredictorScene], self),
+            Button(pygame.Rect(100, 400, 300, 30), "P-Value", [self.switch], [PValueScene], self),
+            Button(pygame.Rect(100, 500, 300, 30), "Rate People", [self.switch], [RateScene], self),
+            Button(pygame.Rect(100, 600, 300, 30), "Quit", [pygame.quit, sys.exit], [], self)
         ]
 
     def handle_events(self, events):
@@ -87,20 +95,17 @@ class MenuScene(Scene):
 class PredictorScene(Scene):
     def __init__(self):
         super().__init__()
-        self.buttons = [
-            Button(pygame.Rect(100, 600, 300, 30), "Return", [self.switch], [MenuScene])
+        self.ui = [
+            Button(pygame.Rect(100, 600, 300, 30), "Return", [self.switch], [MenuScene], self),
+            TextBox(pygame.Rect(50, 150, 400, 30))
         ]
-        self.textbox = TextBox(pygame.Rect(50, 150, 400, 30))
+
 
     def handle_events(self, events):
         super().handle_events(events)
 
-        self.textbox.handle_events(events)
-
     def render(self, surface):
         super().render(surface)
-
-        surface.blit(self.textbox.render(), self.textbox.rect.topleft)
 
         text, rect = titlefont.render("Predict Enjoyment", (255, 255, 0))
         surface.blit(text, (40, 40))
@@ -109,23 +114,17 @@ class PredictorScene(Scene):
 class PValueScene(Scene):
     def __init__(self):
         super().__init__()
-        self.buttons = [
-            Button(pygame.Rect(100, 600, 300, 30), "Return", [self.switch], [MenuScene])
+        self.ui = [
+            Button(pygame.Rect(100, 600, 300, 30), "Return", [self.switch], [MenuScene], self),
+            TextBox(pygame.Rect(50, 150, 400, 30)),
+            Table(pygame.Rect(50, 200, 400, 400))
         ]
-        self.textbox = TextBox(pygame.Rect(50, 150, 400, 30))
-        self.entrytable = Table(pygame.Rect(50, 200, 400, 400))
 
     def handle_events(self, events):
         super().handle_events(events)
 
-        self.textbox.handle_events(events)
-        self.entrytable.handle_events(events)
-
     def render(self, surface):
         super().render(surface)
-
-        surface.blit(self.textbox.render(), self.textbox.rect.topleft)
-        surface.blit(self.entrytable.render(), self.entrytable.rect.topleft)
 
         text, rect = titlefont.render("P-Value Mode", (255, 255, 0))
         surface.blit(text, (40, 40))
@@ -134,20 +133,16 @@ class PValueScene(Scene):
 class RateScene(Scene):
     def __init__(self):
         super().__init__()
-        self.buttons = [
-            Button(pygame.Rect(100, 600, 300, 30), "Return", [self.switch], [MenuScene])
+        self.ui = [
+            Button(pygame.Rect(100, 600, 300, 30), "Return", [self.switch], [MenuScene], self),
+            TextBox(pygame.Rect(50, 150, 400, 30))
         ]
-        self.textbox = TextBox(pygame.Rect(50, 150, 400, 30))
 
     def handle_events(self, events):
         super().handle_events(events)
 
-        self.textbox.handle_events(events)
-
     def render(self, surface):
         super().render(surface)
-
-        surface.blit(self.textbox.render(), self.textbox.rect.topleft)
 
         text, rect = titlefont.render("Rate People", (255, 255, 0))
         surface.blit(text, (40, 40))
@@ -156,20 +151,16 @@ class RateScene(Scene):
 class InfoScene(Scene):
     def __init__(self):
         super().__init__()
-        self.buttons = [
-            Button(pygame.Rect(100, 600, 300, 30), "Return", [self.switch], [MenuScene])
+        self.ui = [
+            Button(pygame.Rect(100, 600, 300, 30), "Return", [self.switch], [MenuScene]),
+            TextBox(pygame.Rect(50, 150, 400, 30))
         ]
-        self.textbox = TextBox(pygame.Rect(50, 150, 400, 30))
 
     def handle_events(self, events):
         super().handle_events(events)
 
-        self.textbox.handle_events(events)
-
     def render(self, surface):
         super().render(surface)
-
-        surface.blit(self.textbox.render(), self.textbox.rect.topleft)
 
         text, rect = titlefont.render("Info", (255, 255, 0))
         surface.blit(text, (40, 40))

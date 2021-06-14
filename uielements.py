@@ -10,7 +10,7 @@ titlefont = pygame.freetype.Font("schoolgirls.otf", 60)
 
 # Class representing a clickable button
 class Button:
-    def __init__(self, rect, text, funcs, args):
+    def __init__(self, rect, text, funcs, args, scene):
         self.rect = rect
         self.text = text
         self.color = (40, 40, 40)
@@ -18,6 +18,7 @@ class Button:
         self.textcolor = (255, 255, 0)
         self.funcs = funcs
         self.args = args
+        self.scene = scene
 
     # Change color on hover
     def hover(self, mousepos):
@@ -41,6 +42,17 @@ class Button:
         surface.blit(text, (surface.get_width() // 2 - rect.width // 2, 10))
 
         return surface
+
+    def handle_events(self, events):
+        mousepos = pygame.mouse.get_pos()
+
+        self.hover(mousepos)
+
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONUP:
+                if self.rect.collidepoint(mousepos):
+                    for func in self.funcs:
+                        self.scene.execute(func, self.args)
 
 
 class TextBox:
