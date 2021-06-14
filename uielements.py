@@ -88,3 +88,26 @@ class TextBox:
                     self.text = self.text[:-1]
         else:
             self.buffer = 0
+
+
+class Table:
+    def __init__(self, rect):
+        self.rect = rect
+        self.entries = {}
+
+    def add_entry(self, entry):
+        self.entries[entry] = entry
+
+    def remove_entry(self, entry):
+        del self.entries[entry]
+
+    def render(self):
+        surface = pygame.Surface(self.rect.size)
+
+        pygame.draw.rect(surface, (40, 40, 40), pygame.Rect(1, 1, self.rect.width - 2, self.rect.height - 2), 0)
+        pygame.draw.rect(surface, (255, 255, 0), pygame.Rect(0, 0, self.rect.width - 1, self.rect.height - 1), 2)
+
+        return surface
+
+    def handle_events(self, events):
+        pass

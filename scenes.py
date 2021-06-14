@@ -113,16 +113,19 @@ class PValueScene(Scene):
             Button(pygame.Rect(100, 600, 300, 30), "Return", [self.switch], [MenuScene])
         ]
         self.textbox = TextBox(pygame.Rect(50, 150, 400, 30))
+        self.entrytable = Table(pygame.Rect(50, 200, 400, 400))
 
     def handle_events(self, events):
         super().handle_events(events)
 
         self.textbox.handle_events(events)
+        self.entrytable.handle_events(events)
 
     def render(self, surface):
         super().render(surface)
 
         surface.blit(self.textbox.render(), self.textbox.rect.topleft)
+        surface.blit(self.entrytable.render(), self.entrytable.rect.topleft)
 
         text, rect = titlefont.render("P-Value Mode", (255, 255, 0))
         surface.blit(text, (40, 40))
