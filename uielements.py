@@ -1,4 +1,5 @@
 import pygame
+import data
 
 # This module contains elements used by the UI (buttons, etc.)
 
@@ -43,8 +44,10 @@ class Button:
 
         return surface
 
-    def handle_events(self, events):
+    def handle_events(self, events, overridemouse=None):
         mousepos = pygame.mouse.get_pos()
+        if overridemouse is not None:
+            mousepos = overridemouse
 
         self.hover(mousepos)
 
@@ -62,6 +65,9 @@ class TextBox:
         self.active = False
         self.buffer = 0
 
+    def get_text(self):
+        return self.text
+
     def render(self):
         surface = pygame.Surface(self.rect.size)
 
@@ -76,8 +82,10 @@ class TextBox:
 
         return surface
 
-    def handle_events(self, events):
+    def handle_events(self, events, overridemouse=None):
         mousepos = pygame.mouse.get_pos()
+        if overridemouse is not None:
+            mousepos = overridemouse
 
         for event in events:
             if event.type == pygame.MOUSEBUTTONUP:
@@ -114,6 +122,9 @@ class Table:
     def remove_entry(self, entry):
         del self.entries[entry]
 
+    def clear(self):
+        self.entries = {}
+
     def render(self):
         surface = pygame.Surface(self.rect.size)
         yellow = (255, 255, 0)
@@ -130,9 +141,9 @@ class Table:
                 text, trect = regularfont.render(info['title'], yellow)
                 surface.blit(text, (20, rect.top + 20))
 
-        # scroll bar
-        barheight = min(1, 4 / len(self.entries))  # height of the bar
-        bartop = self.scroll / (len(self.entries) * 100)  # distance from top
+        # Scroll bar
+        barheight = min(1.0, (self.rect.height / 100) / max(1, len(self.entries)))  # height of the bar
+        bartop = self.scroll / (max(1, len(self.entries)) * 100)  # distance from top
         scrollrect = pygame.Rect(self.rect.width - 20, 5 + (self.rect.height * bartop), 15, (self.rect.height - 10) * barheight - 3)
         pygame.draw.rect(surface, yellow, scrollrect, 0)
 
@@ -141,20 +152,71 @@ class Table:
 
         return surface
 
-    def handle_events(self, events):
+    def handle_events(self, events, overridemouse=None):
         mousepos = pygame.mouse.get_pos()
+        if overridemouse is not None:
+            mousepos = overridemouse
 
         for event in events:
+            # Check if the mouse is being used while positioned over the table
             if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos):
+                # Scrolling upwards
                 if event.button == 4 and self.scroll > 0:
                     self.scroll -= 3
                     self.scroll = max(self.scroll, 0)
-                elif event.button == 5 and self.scroll + 400 < 100 * len(self.entries):
+                # Scrolling downwards
+                elif event.button == 5 and self.scroll + self.rect.height < 100 * len(self.entries):
                     self.scroll += 3
-                    self.scroll = min(self.scroll, 100 * len(self.entries) - 400)
+                    self.scroll = min(self.scroll, 100 * len(self.entries) - self.rect.height)
+                # Clicking with the rightmouse button
                 elif event.button == 1:
+                    # Check if the mouse is positioned over the scroll bar
                     if pygame.Rect(self.rect.right - 25, self.rect.top, 25, self.rect.height).collidepoint(mousepos):
-                        barhalf = (min(1, 4 / len(self.entries)) * self.rect.height) / 2
+                        # Calculate how far the list must scroll so that the middle of the scroll bar lands
+                        # where the mouse was clicked. The scroll bar cannot exceed its boundaries.
+                        barhalf = (min(1.0, 4 / max(1, len(self.entries))) * self.rect.height) / 2
                         relativemouse = min(max(0, mousepos[1] - self.rect.top - barhalf - 5), self.rect.height - (2 * barhalf))
                         span = abs((barhalf - 5) - (self.rect.height - barhalf - 5))
-                        self.scroll = (relativemouse / max(1, span)) * max(0, (len(self.entries) * 100) - 400)
+                        self.scroll = (relativemouse / max(1, span)) * max(0, (len(self.entries) * 100) - self.rect.height)
+
+
+class SearchBox:
+    def __init__(self, rect, searchtype):
+        textrect = pygame.Rect(10, 10, rect.width - 105, 30)
+        buttonrect = pygame.Rect(rect.width - 90, 10, 80, 30)
+        tablerect = pygame.Rect(10, 45, rect.width - 20, rect.height - 55)
+        self.rect = rect
+        self.inputbar = TextBox(textrect)
+        self.searchbutton = Button(buttonrect, "search", [self.search], [self.inputbar.get_text], self)
+        self.outputtable = Table(tablerect)
+        # Searchtype dictates whether the searchbox searches for movies or people, defaulting to movies if unknown
+        # modes are entered.
+        self.searchtype = "person" if searchtype.lower() == "person" else "movie"
+
+    def handle_events(self, events):
+        mousepos = pygame.mouse.get_pos()
+        relativemouse = (mousepos[0] - self.rect.left, mousepos[1] - self.rect.top)
+
+        self.inputbar.handle_events(events, relativemouse)
+        self.searchbutton.handle_events(events, relativemouse)
+        self.outputtable.handle_events(events, relativemouse)
+
+    def render(self):
+        surface = pygame.Surface(self.rect.size)
+        yellow = (255, 255, 0)
+        pygame.draw.rect(surface, yellow, pygame.Rect(0, 0, self.rect.width - 1, self.rect.height - 1), 2)
+
+        surface.blit(self.inputbar.render(), self.inputbar.rect.topleft)
+        surface.blit(self.searchbutton.render(), self.searchbutton.rect.topleft)
+        surface.blit(self.outputtable.render(), self.outputtable.rect.topleft)
+
+        return surface
+
+    @staticmethod
+    def execute(func, args):
+        func(args[0]())
+
+    def search(self, query):
+        results = data.search_person(query, 10) if self.searchtype == "person" else data.search_movie(query, 10)
+        self.outputtable.clear()
+        _ = [self.outputtable.add_entry(entry) for entry in results]

@@ -28,7 +28,7 @@ class Person(Entry):
     def __init__(self, person):
         self.id = person.personID
         self.name = person['name']
-        self.biography = person['biography']
+        #self.biography = person['biography']
         self.scores = 0.0
 
     def basic_info(self):
