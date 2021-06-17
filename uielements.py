@@ -162,11 +162,11 @@ class Table:
             if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos):
                 # Scrolling upwards
                 if event.button == 4 and self.scroll > 0:
-                    self.scroll -= 3
+                    self.scroll -= 6
                     self.scroll = max(self.scroll, 0)
                 # Scrolling downwards
                 elif event.button == 5 and self.scroll + self.rect.height < 100 * len(self.entries):
-                    self.scroll += 3
+                    self.scroll += 6
                     self.scroll = min(self.scroll, 100 * len(self.entries) - self.rect.height)
                 # Clicking with the rightmouse button
                 elif event.button == 1:
