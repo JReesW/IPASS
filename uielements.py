@@ -115,6 +115,7 @@ class Table:
         self.rect = rect
         self.entries = {}
         self.scroll = 0
+        self.selected = None
 
     def add_entry(self, entry):
         self.entries[entry] = entry
@@ -124,6 +125,11 @@ class Table:
 
     def clear(self):
         self.entries = {}
+
+    def get_selected(self):
+        if self.selected is None:
+            return None
+        return list(self.entries.values())[self.selected]
 
     def render(self):
         surface = pygame.Surface(self.rect.size)
@@ -140,6 +146,11 @@ class Table:
                 info = list(self.entries.values())[i].basic_info()
                 text, trect = regularfont.render(info['title'], yellow)
                 surface.blit(text, (20, rect.top + 20))
+
+                # entry buttons
+                pygame.draw.rect(surface, yellow, pygame.Rect(self.rect.width - 100, (i * 100) - self.scroll + 25, 50, 50), 2)
+                if self.selected == i:
+                    pygame.draw.circle(surface, yellow, (self.rect.width - 75, (i * 100) - self.scroll + 50), 15, 3)
 
         # Scroll bar
         barheight = min(1.0, (self.rect.height / 100) / max(1, len(self.entries)))  # height of the bar
@@ -177,7 +188,15 @@ class Table:
                         barhalf = (min(1.0, 4 / max(1, len(self.entries))) * self.rect.height) / 2
                         relativemouse = min(max(0, mousepos[1] - self.rect.top - barhalf - 5), self.rect.height - (2 * barhalf))
                         span = abs((barhalf - 5) - (self.rect.height - barhalf - 5))
-                        self.scroll = (relativemouse / max(1, span)) * max(0, (len(self.entries) * 100) - self.rect.height)
+                        self.scroll = int((relativemouse / max(1, span)) * max(0, (len(self.entries) * 100) - self.rect.height))
+                    else:
+                        for c, e in enumerate(self.entries):
+                            rect = pygame.Rect(self.rect.width - 100 + self.rect.left, (c * 100) - self.scroll + 25 + self.rect.top, 50, 50)
+                            if rect.collidepoint(mousepos):
+                                if self.selected == c:
+                                    self.selected = None
+                                else:
+                                    self.selected = c
 
 
 class SearchBox:
@@ -219,4 +238,6 @@ class SearchBox:
     def search(self, query):
         results = data.search_person(query, 10) if self.searchtype == "person" else data.search_movie(query, 10)
         self.outputtable.clear()
+        self.outputtable.selected = None
+        self.outputtable.scroll = 0
         _ = [self.outputtable.add_entry(entry) for entry in results]

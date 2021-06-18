@@ -100,17 +100,10 @@ class PValueScene(Scene):
         super().__init__()
         self.ui = {
             'return': Button(pygame.Rect(100, 650, 300, 30), "Return", [self.switch], [MenuScene], self),
-            'input': TextBox(pygame.Rect(50, 150, 400, 30)),
             'table': Table(pygame.Rect(50, 200, 600, 400)),
-            'search': SearchBox(pygame.Rect(700, 200, 600, 400), "person")
+            'search': SearchBox(pygame.Rect(800, 200, 600, 400), "person"),
+            'take': Button(pygame.Rect(700, 385, 50, 30), "←", [self.take], [], self)
         }
-        self.ui['table'].add_entry(data.search_movie('interstellar', 1)[0])
-        self.ui['table'].add_entry(data.search_movie('the matrix', 1)[0])
-        self.ui['table'].add_entry(data.search_movie('shrek', 1)[0])
-        self.ui['table'].add_entry(data.search_movie('avatar', 1)[0])
-        self.ui['table'].add_entry(data.search_movie('iron man', 1)[0])
-        self.ui['table'].add_entry(data.search_movie('man of steel', 1)[0])
-        self.ui['table'].add_entry(data.search_movie('primer', 1)[0])
 
     def handle_events(self, events):
         super().handle_events(events)
@@ -120,6 +113,11 @@ class PValueScene(Scene):
 
         text, rect = titlefont.render("P-Value Mode", (255, 255, 0))
         surface.blit(text, (40, 40))
+
+    def take(self):
+        entry = self.ui['search'].outputtable.get_selected()
+        if entry is not None:
+            self.ui['table'].add_entry(entry)
 
 
 class RateScene(Scene):
