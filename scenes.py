@@ -124,8 +124,8 @@ class RateScene(Scene):
     def __init__(self):
         super().__init__()
         self.ui = {
-            'return': Button(pygame.Rect(100, 600, 300, 30), "Return", [self.switch], [MenuScene], self),
-            'input': TextBox(pygame.Rect(50, 150, 400, 30))
+            'return': Button(pygame.Rect(100, 700, 300, 30), "Return", [self.switch], [MenuScene], self),
+            'search': SearchBox(pygame.Rect(225, 150, 1000, 500), "person")
         }
 
     def handle_events(self, events):
