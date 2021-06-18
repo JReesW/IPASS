@@ -1,5 +1,6 @@
 import pygame
 import data
+import scenes
 
 # This module contains elements used by the UI (buttons, etc.)
 
@@ -111,11 +112,13 @@ class TextBox:
 
 
 class Table:
-    def __init__(self, rect):
+    def __init__(self, rect, scene):
         self.rect = rect
         self.entries = {}
         self.scroll = 0
         self.selected = None
+        self.selectable = True
+        self.scene = scene
 
     def add_entry(self, entry):
         self.entries[entry] = entry
@@ -144,13 +147,20 @@ class Table:
 
             if i < len(self.entries):
                 info = list(self.entries.values())[i].basic_info()
-                text, trect = regularfont.render(info['title'], yellow)
+                text, _ = regularfont.render(info['title'], yellow)
                 surface.blit(text, (20, rect.top + 20))
 
-                # entry buttons
-                pygame.draw.rect(surface, yellow, pygame.Rect(self.rect.width - 100, (i * 100) - self.scroll + 25, 50, 50), 2)
-                if self.selected == i:
-                    pygame.draw.circle(surface, yellow, (self.rect.width - 75, (i * 100) - self.scroll + 50), 15, 3)
+                # radio selectors
+                if self.selectable:
+                    pygame.draw.rect(surface, yellow, pygame.Rect(self.rect.width - 100, (i * 100) - self.scroll + 25, 50, 50), 2)
+                    if self.selected == i:
+                        pygame.draw.circle(surface, yellow, (self.rect.width - 75, (i * 100) - self.scroll + 50), 15, 3)
+
+                # info button
+                pygame.draw.rect(surface, yellow, pygame.Rect(self.rect.width - 175, (i * 100) - self.scroll + 25, 50, 50), 2)
+                ifont = pygame.freetype.SysFont('Mono', 50)
+                text, _ = ifont.render("i", yellow)
+                surface.blit(text, (self.rect.width - 160, (i * 100) - self.scroll + 35))
 
         # Scroll bar
         barheight = min(1.0, (self.rect.height / 100) / max(1, len(self.entries)))  # height of the bar
@@ -189,25 +199,28 @@ class Table:
                         relativemouse = min(max(0, mousepos[1] - self.rect.top - barhalf - 5), self.rect.height - (2 * barhalf))
                         span = abs((barhalf - 5) - (self.rect.height - barhalf - 5))
                         self.scroll = int((relativemouse / max(1, span)) * max(0, (len(self.entries) * 100) - self.rect.height))
-                    else:
+                    elif self.selectable:
                         for c, e in enumerate(self.entries):
-                            rect = pygame.Rect(self.rect.width - 100 + self.rect.left, (c * 100) - self.scroll + 25 + self.rect.top, 50, 50)
-                            if rect.collidepoint(mousepos):
+                            radiorect = pygame.Rect(self.rect.width - 100 + self.rect.left, (c * 100) - self.scroll + 25 + self.rect.top, 50, 50)
+                            inforect = pygame.Rect(self.rect.width - 175 + self.rect.left, (c * 100) - self.scroll + 25 + self.rect.top, 50, 50)
+                            if radiorect.collidepoint(mousepos):
                                 if self.selected == c:
                                     self.selected = None
                                 else:
                                     self.selected = c
+                            elif inforect.collidepoint(mousepos):
+                                self.scene.director.switch(scenes.InfoScene(e, self.scene))
 
 
 class SearchBox:
-    def __init__(self, rect, searchtype):
+    def __init__(self, rect, searchtype, scene):
         textrect = pygame.Rect(10, 10, rect.width - 105, 30)
         buttonrect = pygame.Rect(rect.width - 90, 10, 80, 30)
         tablerect = pygame.Rect(10, 45, rect.width - 20, rect.height - 55)
         self.rect = rect
         self.inputbar = TextBox(textrect)
         self.searchbutton = Button(buttonrect, "search", [self.search], [self.inputbar.get_text], self)
-        self.outputtable = Table(tablerect)
+        self.outputtable = Table(tablerect, scene)
         # Searchtype dictates whether the searchbox searches for movies or people, defaulting to movies if unknown
         # modes are entered.
         self.searchtype = "person" if searchtype.lower() == "person" else "movie"

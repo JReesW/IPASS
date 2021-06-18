@@ -54,29 +54,3 @@ class WeightedPattern:
 # TEMPORARY
 def generate_row(scores: float, length: int) -> List[float]:
     return [scores - e for e in range(length)]
-
-
-# TEST VALUES
-# data1 = DataEntry(1234, "Jeff", 8)
-# data2 = DataEntry(1235, "Mike", 4)
-# data3 = DataEntry(1236, "Tim", 9)
-# data4 = DataEntry(1237, "Tom", 2)
-# data5 = DataEntry(1238, "Rich", 4)
-# data6 = DataEntry(1239, "Jake", 2)
-#
-# test = WeightedPattern(6)
-#
-# test.add_row(data1)
-# test.add_row(data2)
-# test.add_row(data3)
-# test.add_row(data4)
-# test.add_row(data5)
-# test.add_row(data6)
-#
-# test2 = test[1:3]
-# print(test.matrix[data4])
-# print(test2.matrix[data4])
-# print(len(test))
-# print(len(test2))
-#
-# print(test.pvalue(20))

@@ -82,7 +82,7 @@ class PredictorScene(Scene):
         super().__init__()
         self.ui = {
             'return': Button(pygame.Rect(100, 650, 300, 30), "Return", [self.switch], [MenuScene], self),
-            'search': SearchBox(pygame.Rect(100, 200, 600, 400), "movie")
+            'search': SearchBox(pygame.Rect(100, 200, 600, 400), "movie", self)
         }
 
     def handle_events(self, events):
@@ -100,10 +100,11 @@ class PValueScene(Scene):
         super().__init__()
         self.ui = {
             'return': Button(pygame.Rect(100, 650, 300, 30), "Return", [self.switch], [MenuScene], self),
-            'table': Table(pygame.Rect(50, 200, 600, 400)),
-            'search': SearchBox(pygame.Rect(800, 200, 600, 400), "person"),
+            'table': Table(pygame.Rect(50, 200, 600, 400), self),
+            'search': SearchBox(pygame.Rect(800, 200, 600, 400), "person", self),
             'take': Button(pygame.Rect(700, 385, 50, 30), "←", [self.take], [], self)
         }
+        self.ui['table'].selectable = False
 
     def handle_events(self, events):
         super().handle_events(events)
@@ -125,7 +126,7 @@ class RateScene(Scene):
         super().__init__()
         self.ui = {
             'return': Button(pygame.Rect(100, 700, 300, 30), "Return", [self.switch], [MenuScene], self),
-            'search': SearchBox(pygame.Rect(225, 150, 1000, 500), "person")
+            'search': SearchBox(pygame.Rect(225, 150, 1000, 500), "person", self)
         }
 
     def handle_events(self, events):
@@ -139,21 +140,38 @@ class RateScene(Scene):
 
 
 class InfoScene(Scene):
-    def __init__(self):
+    def __init__(self, entry, background):
         super().__init__()
+        self.entry = entry
+        self.background = background
         self.ui = {
-            'return': Button(pygame.Rect(100, 600, 300, 30), "Return", [self.switch], [MenuScene]),
-            'input': TextBox(pygame.Rect(50, 150, 400, 30))
+            'return': Button(pygame.Rect(150, 670, 300, 30), "Return", [None], [self.background], self)
         }
+
+    def update(self):
+        if self.ui['return'].funcs[0] is None:
+            self.ui['return'].funcs = [self.director.switch]
 
     def handle_events(self, events):
         super().handle_events(events)
 
     def render(self, surface):
-        super().render(surface)
+        self.background.render(surface)
+        sr = pygame.display.get_surface().get_rect()
+        veil = pygame.Surface(sr.size)
+        pygame.draw.rect(veil, (20, 20, 20), surface.get_rect())
+        veil.set_alpha(100)
+        surface.blit(veil, (0, 0))
+        yellow = (255, 255, 0)
+
+        pygame.draw.rect(surface, (40, 40, 40), pygame.Rect(150, 150, 1150, 500))
+        pygame.draw.rect(surface, yellow, pygame.Rect(150, 150, 1150, 500), 2)
 
         text, rect = titlefont.render("Info", (255, 255, 0))
-        surface.blit(text, (40, 40))
+        surface.blit(text, (190, 190))
+
+        for element in self.ui.values():
+            surface.blit(element.render(), element.rect.topleft)
 
 
 class Fader(Scene):                         # Handles fading in and out between scenes
