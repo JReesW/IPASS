@@ -1,6 +1,5 @@
 import pygame
 import sys
-import random
 from uielements import *
 import data
 
@@ -71,10 +70,8 @@ class MenuScene(Scene):
         super().render(surface)
 
         # Title text
-        text, rect = titlefont.render("Movie Enjoyment Predictor", (255, 255, 0))
-        surface.blit(text, (40, 40))
-        text, rect = regularfont.render("by Jonathan Williams", (255, 255, 0))
-        surface.blit(text, (50, 100))
+        text(surface, "Movie Enjoyment Predictor", (40, 40), titlefont, (255, 255, 0))
+        text(surface, "by Jonathan Williams", (50, 100), regularfont, (255, 255, 0))
 
 
 class PredictorScene(Scene):
@@ -82,7 +79,7 @@ class PredictorScene(Scene):
         super().__init__()
         self.ui = {
             'return': Button(pygame.Rect(100, 650, 300, 30), "Return", [self.switch], [MenuScene], self),
-            'search': SearchBox(pygame.Rect(100, 200, 600, 400), "movie", self)
+            'search': SearchBox(pygame.Rect(100, 200, 1000, 400), "movie", self)
         }
 
     def handle_events(self, events):
@@ -91,8 +88,7 @@ class PredictorScene(Scene):
     def render(self, surface):
         super().render(surface)
 
-        text, rect = titlefont.render("Predict Enjoyment", (255, 255, 0))
-        surface.blit(text, (40, 40))
+        text(surface, "Predict Enjoyment", (40, 40), titlefont, (255, 255, 0))
 
 
 class PValueScene(Scene):
@@ -112,8 +108,7 @@ class PValueScene(Scene):
     def render(self, surface):
         super().render(surface)
 
-        text, rect = titlefont.render("P-Value Mode", (255, 255, 0))
-        surface.blit(text, (40, 40))
+        text(surface, "P-Value Mode", (40, 40), titlefont, (255, 255, 0))
 
     def take(self):
         entry = self.ui['search'].outputtable.get_selected()
@@ -135,14 +130,13 @@ class RateScene(Scene):
     def render(self, surface):
         super().render(surface)
 
-        text, rect = titlefont.render("Rate People", (255, 255, 0))
-        surface.blit(text, (40, 40))
+        text(surface, "Rate People", (40, 40), titlefont, (255, 255, 0))
 
 
 class InfoScene(Scene):
     def __init__(self, entry, background):
         super().__init__()
-        self.entry = entry
+        self.entry = data.update_movie(entry.id, ['main']) if isinstance(entry, data.Movie) else data.update_person(entry.id, ['main'])
         self.background = background
         self.ui = {
             'return': Button(pygame.Rect(150, 670, 300, 30), "Return", [None], [self.background], self)
@@ -160,15 +154,27 @@ class InfoScene(Scene):
         sr = pygame.display.get_surface().get_rect()
         veil = pygame.Surface(sr.size)
         pygame.draw.rect(veil, (20, 20, 20), surface.get_rect())
-        veil.set_alpha(100)
+        veil.set_alpha(150)
         surface.blit(veil, (0, 0))
         yellow = (255, 255, 0)
 
         pygame.draw.rect(surface, (40, 40, 40), pygame.Rect(150, 150, 1150, 500))
         pygame.draw.rect(surface, yellow, pygame.Rect(150, 150, 1150, 500), 2)
 
-        text, rect = titlefont.render("Info", (255, 255, 0))
-        surface.blit(text, (190, 190))
+        text(surface, "Info", (190, 190), titlefont, yellow)
+
+        if isinstance(self.entry, data.Movie):
+            text(surface, "Title", (205, 270), subtitlefont, yellow)
+            text(surface, self.entry.title, (220, 310), regularfont, yellow)
+            text(surface, "Director", (555, 360), subtitlefont, yellow)
+            for i in range(min(2, len(self.entry.directors))):
+                text(surface, self.entry.directors[i].name, (570, 400 + (30 * i)), regularfont, yellow)
+            text(surface, "Cast", (205, 360), subtitlefont, yellow)
+            for i in range(min(8, len(self.entry.cast))):
+                text(surface, self.entry.cast[i].name, (220, 400 + (30 * i)), regularfont, yellow)
+
+        else:
+            pass
 
         for element in self.ui.values():
             surface.blit(element.render(), element.rect.topleft)

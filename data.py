@@ -12,9 +12,14 @@ class Entry:
 
 class Movie(Entry):
     def __init__(self, movie, scores=(0,0)):
+        #ia.update(movie)  # ['title', 'cast', 'directors', 'year'])
         self.id = movie.movieID
         self.title = movie.get('title')
-        self.cast = movie.get('cast')
+        cast = movie.get('cast')
+        self.cast = [Person(p) for p in cast] if cast is not None else []
+        directors = movie.get('directors')
+        self.directors = [Person(p) for p in directors] if directors is not None else []
+        self.year = movie.get('year')
         self.scores = scores
 
     def basic_info(self):
@@ -28,7 +33,7 @@ class Movie(Entry):
 class Person(Entry):
     def __init__(self, person, scores=(0,[0])):
         self.id = person.personID
-        self.name = person['name']
+        self.name = person.get('name')  # person['name']
         #self.biography = person['biography']
         self.scores = scores
 
@@ -39,9 +44,12 @@ class Person(Entry):
             'info': "person info here ;D"
         }
 
+    def __repr__(self):
+        return self.name
+
 
 def get_movie(id_: str) -> object:
-    return Movie(ia.get_movie(id_))
+    return Movie(ia.get_movie(id_, info=['main']))
 
 
 def get_person(id_: str) -> object:
@@ -54,6 +62,18 @@ def search_movie(query: str, amount: int) -> List[object]:
 
 def search_person(query: str, amount: int) -> List[object]:
     return [Person(p) for p in list(ia.search_person(query))[0:amount]]
+
+
+def update_movie(id_: str, tags: List[str]) -> object:
+    movie = ia.get_movie(id_)
+    ia.update(movie, info=tags)
+    return Movie(movie)
+
+
+def update_person(id_: str, tags: List[str]) -> object:
+    person = ia.get_person(id_)
+    ia.update(person, info=tags)
+    return Person(person)
 
 
 def save_person_rating(id_, rating, results):
@@ -92,3 +112,8 @@ def load_movie_ratings():
     except FileNotFoundError:
         _ = open("movies.csv", 'x', newline='')
         return {}
+
+
+# movie = get_movie("0133093")
+# print(movie.cast)
+# print(ia.get_movie_infoset())

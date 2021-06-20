@@ -8,13 +8,20 @@ import scenes
 pygame.freetype.init()
 regularfont = pygame.freetype.SysFont('Mono', 20)
 titlefont = pygame.freetype.Font("schoolgirls.otf", 60)
+subtitlefont = pygame.freetype.Font("schoolgirls.otf", 30)
+
+
+# Add text to a surface
+def text(surface, message, pos, font, color):
+    t, _ = font.render(message, color)
+    surface.blit(t, pos)
 
 
 # Class representing a clickable button
 class Button:
-    def __init__(self, rect, text, funcs, args, scene):
+    def __init__(self, rect, txt, funcs, args, scene):
         self.rect = rect
-        self.text = text
+        self.text = txt
         self.color = (40, 40, 40)
         self.bordercolor = (255, 255, 0)
         self.textcolor = (255, 255, 0)
@@ -40,8 +47,8 @@ class Button:
         pygame.draw.rect(surface, self.bordercolor, pygame.Rect(0, 0, self.rect.width - 1, self.rect.height - 1), 2)
 
         # Text
-        text, rect = regularfont.render(self.text, self.textcolor)
-        surface.blit(text, (surface.get_width() // 2 - rect.width // 2, 10))
+        txt, rect = regularfont.render(self.text, self.textcolor)
+        surface.blit(txt, (surface.get_width() // 2 - rect.width // 2, 10))
 
         return surface
 
@@ -78,8 +85,7 @@ class TextBox:
         pygame.draw.rect(surface, bordercolor, pygame.Rect(0, 0, self.rect.width - 1, self.rect.height - 1), 2)
 
         # Text
-        text, rect = regularfont.render(self.text, (0, 0, 0))
-        surface.blit(text, (10, 10))
+        text(surface, self.text, (10, 10), regularfont, (0, 0, 0))
 
         return surface
 
@@ -147,8 +153,7 @@ class Table:
 
             if i < len(self.entries):
                 info = list(self.entries.values())[i].basic_info()
-                text, _ = regularfont.render(info['title'], yellow)
-                surface.blit(text, (20, rect.top + 20))
+                text(surface, info['title'], (20, rect.top + 20), regularfont, yellow)
 
                 # radio selectors
                 if self.selectable:
@@ -159,8 +164,7 @@ class Table:
                 # info button
                 pygame.draw.rect(surface, yellow, pygame.Rect(self.rect.width - 175, (i * 100) - self.scroll + 25, 50, 50), 2)
                 ifont = pygame.freetype.SysFont('Mono', 50)
-                text, _ = ifont.render("i", yellow)
-                surface.blit(text, (self.rect.width - 160, (i * 100) - self.scroll + 35))
+                text(surface, "i", (self.rect.width - 160, (i * 100) - self.scroll + 35), ifont, yellow)
 
         # Scroll bar
         barheight = min(1.0, (self.rect.height / 100) / max(1, len(self.entries)))  # height of the bar
