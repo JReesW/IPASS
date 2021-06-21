@@ -154,6 +154,7 @@ class Table:
             if i < len(self.entries):
                 info = list(self.entries.values())[i].basic_info()
                 text(surface, info['title'], (20, rect.top + 20), regularfont, yellow)
+                text(surface, info['info'], (30, rect.top + 45), pygame.freetype.SysFont('Mono', 15), yellow)
 
                 # radio selectors
                 if self.selectable:

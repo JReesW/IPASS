@@ -120,7 +120,8 @@ class RateScene(Scene):
     def __init__(self):
         super().__init__()
         self.ui = {
-            'return': Button(pygame.Rect(100, 700, 300, 30), "Return", [self.switch], [MenuScene], self),
+            'return': Button(pygame.Rect(225, 700, 300, 30), "Return", [self.switch], [MenuScene], self),
+            'rate': Button(pygame.Rect(575, 700, 300, 30), "Rate", [self.rate], [], self),
             'search': SearchBox(pygame.Rect(225, 150, 1000, 500), "person", self)
         }
 
@@ -132,12 +133,77 @@ class RateScene(Scene):
 
         text(surface, "Rate People", (40, 40), titlefont, (255, 255, 0))
 
+    def rate(self):
+        entry = self.ui['search'].outputtable.get_selected()
+        if entry is not None:
+            self.director.switch(ApplyRateScene(entry, self))
+
+
+class ApplyRateScene(Scene):
+    def __init__(self, entry, background):
+        super().__init__()
+        self.entry = entry
+        self.background = background
+        self.error = [""]
+        self.ui = {
+            'return': Button(pygame.Rect(485, 500, 215, 30), "Return", [None], [self.background], self),
+            'apply': Button(pygame.Rect(750, 500, 215, 30), "Apply", [self.apply], [], self),
+            'text': TextBox(pygame.Rect(850, 400, 100, 30))
+        }
+
+    def update(self):
+        if self.ui['return'].funcs[0] is None:
+            self.ui['return'].funcs = [self.director.switch]
+
+    def handle_events(self, events):
+        super().handle_events(events)
+
+    def render(self, surface):
+        self.background.render(surface)
+        sr = pygame.display.get_surface().get_rect()
+        veil = pygame.Surface(sr.size)
+        pygame.draw.rect(veil, (20, 20, 20), surface.get_rect())
+        veil.set_alpha(150)
+        surface.blit(veil, (0, 0))
+        yellow = (255, 255, 0)
+
+        pygame.draw.rect(surface, (40, 40, 40), pygame.Rect(475, 250, 500, 300))
+        pygame.draw.rect(surface, yellow, pygame.Rect(475, 250, 500, 300), 2)
+
+        text(surface, "Rate", (510, 285), subtitlefont, yellow)
+        savedata = data.load_person_ratings()
+        if self.entry.id in savedata:
+            text(surface, f"{self.entry.name} (currently: {savedata[self.entry.id][0]})", (520, 315), regularfont, yellow)
+        else:
+            text(surface, self.entry.name, (520, 315), regularfont, yellow)
+        text(surface, "Enter a rating (1.0 - 10.0):", (485, 410), regularfont, yellow)
+
+        for e in range(len(self.error)):
+            text(surface, self.error[e], (500, 440 + (e * 20)), regularfont, yellow)
+
+        for element in self.ui.values():
+            surface.blit(element.render(), element.rect.topleft)
+
+    def apply(self):
+        score = self.ui['text'].get_text()
+        try:
+            rating = float(score)
+            if rating < 1.0 or rating > 10.0:
+                raise ValueError
+            savedata = data.load_person_ratings()
+            if self.entry.id in savedata:
+                data.save_person_rating(self.entry.id, rating, savedata[self.entry.id][1])
+            else:
+                data.save_person_rating(self.entry.id, rating, [])
+            self.error = ["Rating saved succesfully"]
+        except ValueError:
+            self.error = ["Error: Input is not a number", "       between 1.0 and 10.0"]
+
 
 class InfoScene(Scene):
     def __init__(self, entry, background):
         super().__init__()
         self.entry = data.update_movie(entry.id, ['main']) if isinstance(entry, data.Movie) else data.update_person(entry.id, ['main'])
-        print(self.entry.url)
         self.background = background
         self.ui = {
             'return': Button(pygame.Rect(150, 670, 300, 30), "Return", [None], [self.background], self)

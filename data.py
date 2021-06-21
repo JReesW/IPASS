@@ -37,7 +37,7 @@ class Movie(Entry):
         return {
             'id': self.id,
             'title': self.title,
-            'info': "movie info here :)"
+            'info': f"{self.year if self.year is not None else '???'}"
         }
 
 
@@ -65,7 +65,7 @@ class Person(Entry):
         return {
             'id': self.id,
             'title': self.name,
-            'info': "person info here ;D"
+            'info': self.birthdate
         }
 
     def __repr__(self):
