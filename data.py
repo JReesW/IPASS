@@ -1,6 +1,7 @@
 from imdb import IMDb
 from typing import List
-import csv
+import csv, requests, io
+import pygame
 
 ia = IMDb()
 
@@ -12,7 +13,6 @@ class Entry:
 
 class Movie(Entry):
     def __init__(self, movie, scores=(0,0)):
-        #ia.update(movie)  # ['title', 'cast', 'directors', 'year'])
         self.id = movie.movieID
         self.title = movie.get('title')
         cast = movie.get('cast')
@@ -20,6 +20,17 @@ class Movie(Entry):
         directors = movie.get('directors')
         self.directors = [Person(p) for p in directors] if directors is not None else []
         self.year = movie.get('year')
+        try:
+            url = movie.get('cover url')
+            if url is not None and "_CR" in url:
+                url = url[:-22]
+                self.url = url + "450_CR0,0,303,450_.jpg" if url[-1] == "Y" else url + "303_CR0,0,303,450_.jpg"
+            else:
+                self.url = url
+            r = requests.get(self.url)
+            self.poster = pygame.image.load_extended(io.BytesIO(r.content), self.url)
+        except requests.exceptions.RequestException:
+            self.poster = None
         self.scores = scores
 
     def basic_info(self):
@@ -33,8 +44,21 @@ class Movie(Entry):
 class Person(Entry):
     def __init__(self, person, scores=(0,[0])):
         self.id = person.personID
-        self.name = person.get('name')  # person['name']
-        #self.biography = person['biography']
+        self.name = person.get('name')
+        self.birthdate = person.get('birth date')
+        birthinfo = person.get('birth info')
+        self.birthplace = birthinfo['birth place'] if birthinfo is not None else ""
+        try:
+            url = person.get('headshot')
+            if "_CR" in url:
+                url = url[:-22]
+                self.url = url + "450_CR0,0,303,450_.jpg" if url[-1] == "Y" else url + "303_CR0,0,303,450_.jpg"
+            else:
+                self.url = url
+            r = requests.get(self.url)
+            self.headshot = pygame.image.load_extended(io.BytesIO(r.content), self.url)
+        except Exception:
+            self.headshot = None
         self.scores = scores
 
     def basic_info(self):
@@ -53,7 +77,7 @@ def get_movie(id_: str) -> object:
 
 
 def get_person(id_: str) -> object:
-    return Person(ia.get_person(id_))
+    return Person(ia.get_person(id_, info=['main']))
 
 
 def search_movie(query: str, amount: int) -> List[object]:
@@ -112,8 +136,3 @@ def load_movie_ratings():
     except FileNotFoundError:
         _ = open("movies.csv", 'x', newline='')
         return {}
-
-
-# movie = get_movie("0133093")
-# print(movie.cast)
-# print(ia.get_movie_infoset())

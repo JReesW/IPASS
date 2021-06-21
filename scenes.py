@@ -137,6 +137,7 @@ class InfoScene(Scene):
     def __init__(self, entry, background):
         super().__init__()
         self.entry = data.update_movie(entry.id, ['main']) if isinstance(entry, data.Movie) else data.update_person(entry.id, ['main'])
+        print(self.entry.url)
         self.background = background
         self.ui = {
             'return': Button(pygame.Rect(150, 670, 300, 30), "Return", [None], [self.background], self)
@@ -172,9 +173,17 @@ class InfoScene(Scene):
             text(surface, "Cast", (205, 360), subtitlefont, yellow)
             for i in range(min(8, len(self.entry.cast))):
                 text(surface, self.entry.cast[i].name, (220, 400 + (30 * i)), regularfont, yellow)
-
+            if self.entry.poster is not None:
+                surface.blit(self.entry.poster, (972, 175))
         else:
-            pass
+            text(surface, "Name", (255, 270), subtitlefont, yellow)
+            text(surface, self.entry.name, (270, 310), regularfont, yellow)
+            text(surface, "Birth date", (255, 360), subtitlefont, yellow)
+            text(surface, self.entry.birthdate, (270, 400), regularfont, yellow)
+            text(surface, "Birth place", (255, 450), subtitlefont, yellow)
+            text(surface, self.entry.birthplace, (270, 490), regularfont, yellow)
+            if self.entry.headshot is not None:
+                surface.blit(self.entry.headshot, (972, 175))
 
         for element in self.ui.values():
             surface.blit(element.render(), element.rect.topleft)
