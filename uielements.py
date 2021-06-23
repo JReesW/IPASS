@@ -32,7 +32,7 @@ class Button:
     """
     A button that can be pressed and then executes a function on the given scene
     """
-    def __init__(self, rect: pygame.Rect, txt: str, funcs: Callable, args: List[any], scene: scenes.Scene) -> None:
+    def __init__(self, rect: pygame.Rect, txt: str, funcs: Callable, args: List[any], scene: object) -> None:
         self.rect = rect
         self.text = txt
         self.color = (40, 40, 40)
@@ -125,7 +125,7 @@ class TextBox:
 
         return surface
 
-    def handle_events(self, events: List[pygame.event], overridemouse=None) -> None:
+    def handle_events(self, events: List[object], overridemouse=None) -> None:
         mousepos = pygame.mouse.get_pos()
         if overridemouse is not None:
             mousepos = overridemouse
@@ -158,7 +158,7 @@ class Table:
     A table which can store data entries and displays them.
     Has scrolling features and the ability to select entries and view more info.
     """
-    def __init__(self, rect: pygame.Rect, scene: scenes.Scene) -> None:
+    def __init__(self, rect: pygame.Rect, scene: object) -> None:
         self.rect = rect
         self.entries = {}
         self.scroll = 0
@@ -284,7 +284,7 @@ class SearchBox:
     """
     A search box, combining a button, text box, and table into one
     """
-    def __init__(self, rect: pygame.Rect, searchtype: str, scene: scenes.Scene) -> None:
+    def __init__(self, rect: pygame.Rect, searchtype: str, scene: object) -> None:
         textrect = pygame.Rect(10, 10, rect.width - 105, 30)
         buttonrect = pygame.Rect(rect.width - 90, 10, 80, 30)
         tablerect = pygame.Rect(10, 45, rect.width - 20, rect.height - 55)
@@ -296,7 +296,7 @@ class SearchBox:
         # modes are entered.
         self.searchtype = "person" if searchtype.lower() == "person" else "movie"
 
-    def handle_events(self, events: List[pygame.event]) -> None:
+    def handle_events(self, events: List[object]) -> None:
         mousepos = pygame.mouse.get_pos()
         relativemouse = (mousepos[0] - self.rect.left, mousepos[1] - self.rect.top)
 
