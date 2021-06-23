@@ -162,10 +162,10 @@ class Table:
                     if self.selected == i:
                         pygame.draw.circle(surface, yellow, (self.rect.width - 75, (i * 100) - self.scroll + 50), 15, 3)
 
-                # info button
-                pygame.draw.rect(surface, yellow, pygame.Rect(self.rect.width - 175, (i * 100) - self.scroll + 25, 50, 50), 2)
-                ifont = pygame.freetype.SysFont('Mono', 50)
-                text(surface, "i", (self.rect.width - 160, (i * 100) - self.scroll + 35), ifont, yellow)
+                    # info button
+                    pygame.draw.rect(surface, yellow, pygame.Rect(self.rect.width - 175, (i * 100) - self.scroll + 25, 50, 50), 2)
+                    ifont = pygame.freetype.SysFont('Mono', 50)
+                    text(surface, "i", (self.rect.width - 160, (i * 100) - self.scroll + 35), ifont, yellow)
 
         # Scroll bar
         barheight = min(1.0, (self.rect.height / 100) / max(1, len(self.entries)))  # height of the bar

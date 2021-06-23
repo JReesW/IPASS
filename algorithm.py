@@ -1,6 +1,7 @@
 from typing import Tuple, List, Union
 from copy import copy
 import data
+import math
 
 
 class WeightedPattern:
@@ -10,7 +11,7 @@ class WeightedPattern:
 
     # Add a new row for a given data entry
     def add_row(self, info: object) -> None:
-        self.matrix[info] = generate_row(info.scores, self.length)
+        self.matrix[info] = generate_row(info.get_ratings(), self.length)
 
     # Get a specific weight via square bracket indexing, according to definition 1 of the paper
     # Or get a segment of the entire matrix using slice indexing, as used in definition 4 of the paper
@@ -52,5 +53,23 @@ class WeightedPattern:
 
 
 # TEMPORARY
-def generate_row(scores: float, length: int) -> List[float]:
-    return [scores - e for e in range(length)]
+def generate_row(scores: Tuple[float, List[float]], length: int) -> List[float]:
+    result = []
+    rating, previous = scores
+    for pos in range(1, length + 1):
+        diff = rating - 5.5
+        compared = diff + compare_ratings(rating, previous)
+        result.append(rating + (compared * impact(pos)))
+    return result
+
+
+# Gives an impact score for a given position
+def impact(pos: float) -> float:
+    if pos < 9:
+        return math.sin((pos + 3) * (math.pi / 8)) + 1
+    return 0
+
+
+# Returns the average of how much the final film scores differ from the rating given to the person
+def compare_ratings(rating: float, previous: List[float]) -> float:
+    return (sum([f - rating for f in previous]) / max(1, len(previous))) / 10

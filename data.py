@@ -68,6 +68,15 @@ class Person(Entry):
             'info': self.birthdate
         }
 
+    def get_ratings(self):
+        savedata = load_person_ratings()
+        if self.id in savedata:
+            if savedata[self.id][0] == "null":
+                return 5.5, [float(f) for f in savedata[self.id][1]]
+            return float(savedata[self.id][0]), [float(f) for f in savedata[self.id][1]]
+        else:
+            return 5.5, []
+
     def __repr__(self):
         return self.name
 

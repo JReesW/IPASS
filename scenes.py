@@ -2,6 +2,7 @@ import pygame
 import sys
 from uielements import *
 import data
+from algorithm import WeightedPattern
 
 # This module contains all of the scenes used by the Movie predictor
 
@@ -78,8 +79,9 @@ class PredictorScene(Scene):
     def __init__(self):
         super().__init__()
         self.ui = {
-            'return': Button(pygame.Rect(100, 650, 300, 30), "Return", [self.switch], [MenuScene], self),
-            'search': SearchBox(pygame.Rect(100, 200, 1000, 400), "movie", self)
+            'return': Button(pygame.Rect(225, 700, 300, 30), "Return", [self.switch], [MenuScene], self),
+            'predict': Button(pygame.Rect(575, 700, 300, 30), "Predict", [self.predict], [], self),
+            'search': SearchBox(pygame.Rect(225, 150, 1000, 500), "movie", self)
         }
 
     def handle_events(self, events):
@@ -90,6 +92,20 @@ class PredictorScene(Scene):
 
         text(surface, "Predict Enjoyment", (40, 40), titlefont, (255, 255, 0))
 
+    def predict(self):
+        movie = data.update_movie(self.ui['search'].outputtable.get_selected().id, ['main'])
+        cast = movie.cast[:10]
+        wp = WeightedPattern(len(cast))
+        for person in cast:
+            wp.add_row(person)
+        result = float(f"{wp.score(cast) / wp.length:.1f}")
+        savedata = data.load_movie_ratings()
+        if movie.id in savedata:
+            data.save_movie_rating(movie.id, result, savedata[movie.id][1])
+        else:
+            data.save_movie_rating(movie.id, result, 0)
+        self.director.switch(PredictResultScene(movie, cast, wp.score(cast) / wp.length, self))
+
 
 class PValueScene(Scene):
     def __init__(self):
@@ -98,9 +114,11 @@ class PValueScene(Scene):
             'return': Button(pygame.Rect(100, 650, 300, 30), "Return", [self.switch], [MenuScene], self),
             'table': Table(pygame.Rect(50, 200, 600, 400), self),
             'search': SearchBox(pygame.Rect(800, 200, 600, 400), "person", self),
-            'take': Button(pygame.Rect(700, 385, 50, 30), "←", [self.take], [], self)
+            'take': Button(pygame.Rect(700, 385, 50, 30), "←", [self.take], [], self),
+            'calculate': Button(pygame.Rect(450, 650, 300, 30), "Calculate", [self.calculate], [], self)
         }
         self.ui['table'].selectable = False
+        self.error = ""
 
     def handle_events(self, events):
         super().handle_events(events)
@@ -109,11 +127,24 @@ class PValueScene(Scene):
         super().render(surface)
 
         text(surface, "P-Value Mode", (40, 40), titlefont, (255, 255, 0))
+        text(surface, self.error, (70, 160), regularfont, (255, 255, 0))
 
     def take(self):
         entry = self.ui['search'].outputtable.get_selected()
         if entry is not None:
             self.ui['table'].add_entry(entry)
+
+    def calculate(self):
+        entries = self.ui['table'].entries
+        if len(entries) < 8:
+            self.error = ""
+            wp = WeightedPattern(len(entries))
+            for entry in entries:
+                wp.add_row(entries[entry])
+                print(wp.matrix[entry])
+            self.director.switch(PValueResultScene(wp.pvalue(7.0 * len(entries)), self))
+        else:
+            self.error = "Error: Having 8 or more entries takes too long to calculate..."
 
 
 class RateScene(Scene):
@@ -137,6 +168,112 @@ class RateScene(Scene):
         entry = self.ui['search'].outputtable.get_selected()
         if entry is not None:
             self.director.switch(ApplyRateScene(entry, self))
+
+
+# Overlay scenes
+class PredictResultScene(Scene):
+    def __init__(self, entry, cast, result, background):
+        super().__init__()
+        self.entry = entry
+        self.cast = cast
+        self.result = result
+        self.background = background
+        self.error = [""]
+        self.ui = {
+            'return': Button(pygame.Rect(485, 500, 215, 30), "Return", [None], [self.background], self),
+            'apply': Button(pygame.Rect(750, 500, 215, 30), "Apply", [self.apply], [], self),
+            'text': TextBox(pygame.Rect(850, 400, 100, 30))
+        }
+
+    def update(self):
+        if self.ui['return'].funcs[0] is None:
+            self.ui['return'].funcs = [self.director.switch]
+
+    def handle_events(self, events):
+        super().handle_events(events)
+
+    def render(self, surface):
+        self.background.render(surface)
+        sr = pygame.display.get_surface().get_rect()
+        veil = pygame.Surface(sr.size)
+        pygame.draw.rect(veil, (20, 20, 20), surface.get_rect())
+        veil.set_alpha(150)
+        surface.blit(veil, (0, 0))
+        yellow = (255, 255, 0)
+
+        pygame.draw.rect(surface, (40, 40, 40), pygame.Rect(475, 250, 500, 300))
+        pygame.draw.rect(surface, yellow, pygame.Rect(475, 250, 500, 300), 2)
+
+        text(surface, "Results!", (510, 285), subtitlefont, yellow)
+        text(surface, f"Your predicted enjoyment: {self.result:.1f}/10.0", (520, 320), regularfont, yellow)
+        text(surface, "What score would you give after viewing?", (485, 380), regularfont, yellow)
+        text(surface, "Enter a rating (1.0 - 10.0):", (485, 410), regularfont, yellow)
+
+        for e in range(len(self.error)):
+            text(surface, self.error[e], (500, 440 + (e * 20)), regularfont, yellow)
+
+        for element in self.ui.values():
+            surface.blit(element.render(), element.rect.topleft)
+
+    def apply(self):
+        score = self.ui['text'].get_text()
+        try:
+            rating = float(score)
+            if rating < 1.0 or rating > 10.0:
+                raise ValueError
+            moviesavedata = data.load_movie_ratings()
+            if self.entry.id in moviesavedata:
+                data.save_movie_rating(self.entry.id, moviesavedata[self.entry.id][0], rating)
+            else:
+                data.save_movie_rating(self.entry.id, 0, rating)
+            personsavedata = data.load_person_ratings()
+            for c in self.cast:
+                if c.id in personsavedata:
+                    data.save_person_rating(c.id, personsavedata[c.id][0], [*personsavedata[c.id][1], rating])
+                else:
+                    data.save_person_rating(c.id, "null", [rating])
+            self.error = ["Rating saved succesfully"]
+        except ValueError:
+            self.error = ["Error: Input is not a number", "       between 1.0 and 10.0"]
+
+
+class PValueResultScene(Scene):
+    def __init__(self, result, background):
+        super().__init__()
+        self.result = result
+        self.background = background
+        self.error = [""]
+        self.ui = {
+            'return': Button(pygame.Rect(500, 500, 450, 30), "Return", [None], [self.background], self)
+        }
+
+    def update(self):
+        if self.ui['return'].funcs[0] is None:
+            self.ui['return'].funcs = [self.director.switch]
+
+    def handle_events(self, events):
+        super().handle_events(events)
+
+    def render(self, surface):
+        self.background.render(surface)
+        sr = pygame.display.get_surface().get_rect()
+        veil = pygame.Surface(sr.size)
+        pygame.draw.rect(veil, (20, 20, 20), surface.get_rect())
+        veil.set_alpha(150)
+        surface.blit(veil, (0, 0))
+        yellow = (255, 255, 0)
+
+        pygame.draw.rect(surface, (40, 40, 40), pygame.Rect(475, 250, 500, 300))
+        pygame.draw.rect(surface, yellow, pygame.Rect(475, 250, 500, 300), 2)
+
+        text(surface, "Results!", (510, 285), subtitlefont, yellow)
+        text(surface, f"Chance of you enjoying this: {float(f'{self.result:.4f}') * 100:.2f}%", (520, 350), regularfont, yellow)
+
+        for e in range(len(self.error)):
+            text(surface, self.error[e], (500, 440 + (e * 20)), regularfont, yellow)
+
+        for element in self.ui.values():
+            surface.blit(element.render(), element.rect.topleft)
 
 
 class ApplyRateScene(Scene):
@@ -172,7 +309,7 @@ class ApplyRateScene(Scene):
 
         text(surface, "Rate", (510, 285), subtitlefont, yellow)
         savedata = data.load_person_ratings()
-        if self.entry.id in savedata:
+        if self.entry.id in savedata and savedata[self.entry.id][0] != "null":
             text(surface, f"{self.entry.name} (currently: {savedata[self.entry.id][0]})", (520, 315), regularfont, yellow)
         else:
             text(surface, self.entry.name, (520, 315), regularfont, yellow)
