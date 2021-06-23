@@ -1,6 +1,7 @@
 import pygame
 import data
 import scenes
+from typing import Tuple, Callable, List, Union
 
 # This module contains elements used by the UI (buttons, etc.)
 
@@ -12,14 +13,26 @@ subtitlefont = pygame.freetype.Font("schoolgirls.otf", 30)
 
 
 # Add text to a surface
-def text(surface, message, pos, font, color):
+def text(surface: pygame.Surface, message: str, pos: Tuple[int, int], font: pygame.freetype, color: Tuple[int, int, int]) -> None:
+    """
+    Draws text to a given surface
+
+    :param surface: the surface to draw to
+    :param message: the text to draw
+    :param pos: the position of the drawing on the surface (topleft)
+    :param font: the font to draw the text with
+    :param color: the color of the text
+    """
     t, _ = font.render(message, color)
     surface.blit(t, pos)
 
 
 # Class representing a clickable button
 class Button:
-    def __init__(self, rect, txt, funcs, args, scene):
+    """
+    A button that can be pressed and then executes a function on the given scene
+    """
+    def __init__(self, rect: pygame.Rect, txt: str, funcs: Callable, args: List[any], scene: scenes.Scene) -> None:
         self.rect = rect
         self.text = txt
         self.color = (40, 40, 40)
@@ -30,7 +43,12 @@ class Button:
         self.scene = scene
 
     # Change color on hover
-    def hover(self, mousepos):
+    def hover(self, mousepos: Tuple[int, int]) -> None:
+        """
+        Changes the color of the button when the mouse is positioned on top of it
+
+        :param mousepos: the position of the mouse
+        """
         if self.rect.collidepoint(mousepos):
             # Become darker when mouse is hovering over button
             self.color = tuple([self.color[i] - 2 if self.color[i] > 20 else self.color[i] for i in range(3)])
@@ -39,7 +57,12 @@ class Button:
             self.color = tuple([self.color[i] + 2 if self.color[i] < 40 else self.color[i] for i in range(3)])
 
     # Draw the button
-    def render(self):
+    def render(self) -> None:
+        """
+        Return a surface containing the rendered button
+
+        :return: the button surface
+        """
         surface = pygame.Surface(self.rect.size)
 
         # Background and border
@@ -52,7 +75,7 @@ class Button:
 
         return surface
 
-    def handle_events(self, events, overridemouse=None):
+    def handle_events(self, events, overridemouse=None) -> None:
         mousepos = pygame.mouse.get_pos()
         if overridemouse is not None:
             mousepos = overridemouse
@@ -67,16 +90,29 @@ class Button:
 
 
 class TextBox:
-    def __init__(self, rect):
+    """
+    A text box which can be activated by being clicked on, after which text can be written into it
+    """
+    def __init__(self, rect: pygame.Rect) -> None:
         self.rect = rect
         self.text = ""
         self.active = False
         self.buffer = 0
 
-    def get_text(self):
+    def get_text(self) -> str:
+        """
+        Return the text written into this text box
+
+        :return: the text
+        """
         return self.text
 
-    def render(self):
+    def render(self) -> pygame.Surface:
+        """
+        Return a surface containing the rendered text box
+
+        :return: the text box surface
+        """
         surface = pygame.Surface(self.rect.size)
 
         # Background and border
@@ -89,7 +125,7 @@ class TextBox:
 
         return surface
 
-    def handle_events(self, events, overridemouse=None):
+    def handle_events(self, events: List[pygame.event], overridemouse=None) -> None:
         mousepos = pygame.mouse.get_pos()
         if overridemouse is not None:
             mousepos = overridemouse
@@ -118,7 +154,11 @@ class TextBox:
 
 
 class Table:
-    def __init__(self, rect, scene):
+    """
+    A table which can store data entries and displays them.
+    Has scrolling features and the ability to select entries and view more info.
+    """
+    def __init__(self, rect: pygame.Rect, scene: scenes.Scene) -> None:
         self.rect = rect
         self.entries = {}
         self.scroll = 0
@@ -126,21 +166,44 @@ class Table:
         self.selectable = True
         self.scene = scene
 
-    def add_entry(self, entry):
+    def add_entry(self, entry: data.Entry) -> None:
+        """
+        Add a given entry to the table
+
+        :param entry: a new entry to add
+        """
         self.entries[entry] = entry
 
-    def remove_entry(self, entry):
+    def remove_entry(self, entry: data.Entry) -> None:
+        """
+        Remove a given entry from the table
+
+        :param entry: the entry to remove
+        """
         del self.entries[entry]
 
-    def clear(self):
+    def clear(self) -> None:
+        """
+        Removes all entries from the table
+        """
         self.entries = {}
 
-    def get_selected(self):
+    def get_selected(self) -> Union[data.Entry, None]:
+        """
+        Returns the selected entry
+
+        :return: a data entry
+        """
         if self.selected is None:
             return None
         return list(self.entries.values())[self.selected]
 
-    def render(self):
+    def render(self) -> pygame.Surface:
+        """
+        Return a surface containing the rendered table
+
+        :return: the table surface
+        """
         surface = pygame.Surface(self.rect.size)
         yellow = (255, 255, 0)
         pygame.draw.rect(surface, (40, 40, 40), pygame.Rect(1, 1, self.rect.width - 2, self.rect.height - 2), 0)
@@ -218,7 +281,10 @@ class Table:
 
 
 class SearchBox:
-    def __init__(self, rect, searchtype, scene):
+    """
+    A search box, combining a button, text box, and table into one
+    """
+    def __init__(self, rect: pygame.Rect, searchtype: str, scene: scenes.Scene) -> None:
         textrect = pygame.Rect(10, 10, rect.width - 105, 30)
         buttonrect = pygame.Rect(rect.width - 90, 10, 80, 30)
         tablerect = pygame.Rect(10, 45, rect.width - 20, rect.height - 55)
@@ -230,7 +296,7 @@ class SearchBox:
         # modes are entered.
         self.searchtype = "person" if searchtype.lower() == "person" else "movie"
 
-    def handle_events(self, events):
+    def handle_events(self, events: List[pygame.event]) -> None:
         mousepos = pygame.mouse.get_pos()
         relativemouse = (mousepos[0] - self.rect.left, mousepos[1] - self.rect.top)
 
@@ -238,7 +304,12 @@ class SearchBox:
         self.searchbutton.handle_events(events, relativemouse)
         self.outputtable.handle_events(events, relativemouse)
 
-    def render(self):
+    def render(self) -> pygame.Surface:
+        """
+        Return a surface containing the rendered search box
+
+        :return: the search box surface
+        """
         surface = pygame.Surface(self.rect.size)
         yellow = (255, 255, 0)
         pygame.draw.rect(surface, yellow, pygame.Rect(0, 0, self.rect.width - 1, self.rect.height - 1), 2)
@@ -250,10 +321,22 @@ class SearchBox:
         return surface
 
     @staticmethod
-    def execute(func, args):
+    def execute(func: Callable, args: List[any]) -> None:
+        """
+        Execute a given function and pass args as arguments
+        Can be called by buttons to call class methods
+
+        :param func: the function to execute
+        :param args: the arguments to pass to the function
+        """
         func(args[0]())
 
-    def search(self, query):
+    def search(self, query: str) -> None:
+        """
+        Fill the table with search results from parsing the string into IMDbPy
+
+        :param query: the queried string
+        """
         results = data.search_person(query, 10) if self.searchtype == "person" else data.search_movie(query, 10)
         self.outputtable.clear()
         self.outputtable.selected = None

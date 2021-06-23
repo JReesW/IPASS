@@ -11,31 +11,62 @@ from algorithm import WeightedPattern
 
 # Controls the scenes and handles transitions between them
 class Director:
+    """
+    Directs which scene is active and sends handle_events(), update(), and render() to the active scene
+    """
+
     def __init__(self):
+        """
+        Initialize the director, starting with a menu scene
+        """
         self.scene = None
         self.switch(MenuScene())
 
     # Takes the new scene as its current scene and adds itself to it
     def switch(self, scene):
+        """
+        Switch active scene to the given scene
+
+        :param scene: the new active scene
+        """
         self.scene = scene
         self.scene.director = self
 
 
 # Scene base class
 class Scene:
+    """
+    The basic scene class
+    """
+
     def __init__(self):
-        # Scenes initially have no director
+        """
+        Initialize the scene, declaring the director and ui attributes
+        """
         self.director = None
         self.ui = {}
 
     def handle_events(self, events):
+        """
+        Handle events like keyboard or mouse input given via the events param
+
+        :param events: a list of pygame events
+        """
         for element in self.ui.values():
             element.handle_events(events)
 
     def update(self):
+        """
+        Update the state of this scene
+        """
         pass
 
     def render(self, surface):
+        """
+        Draw to the given surface
+
+        :param surface: the surface to draw to
+        """
         # Clear screen
         surface.fill((40, 40, 40))
 
@@ -43,18 +74,39 @@ class Scene:
         for element in self.ui.values():
             surface.blit(element.render(), element.rect.topleft)
 
-    # Used for switching to another scene, can be called by buttons.
     def switch(self, scene, args=None):
+        """
+        Calls for its director to switch to the given scene. Applies the args to the scene
+
+        :param scene: the scene to switch to
+        :param args: possible arguments for the switch initialization
+        """
         args = [] if args is None else args
         self.director.switch(Fader(self, scene(*args)))
 
     @staticmethod
     def execute(func, args):
+        """
+        Execute a given function and pass args as arguments
+        Can be called by buttons to call class methods
+
+        :param func: the function to execute
+        :param args: the arguments to pass to the function
+        """
         func(*args)
+
+
+"""
+From this point forward there will be no docstrings for handle_events(), update(), and render()
+as they have already been described above
+"""
 
 
 # The class representing the main menu
 class MenuScene(Scene):
+    """
+    The main menu of the application
+    """
     def __init__(self):
         super().__init__()
         self.ui = {
@@ -76,6 +128,9 @@ class MenuScene(Scene):
 
 
 class PredictorScene(Scene):
+    """
+    The scene where the user can select a movie to predict a score
+    """
     def __init__(self):
         super().__init__()
         self.ui = {
@@ -93,6 +148,9 @@ class PredictorScene(Scene):
         text(surface, "Predict Enjoyment", (40, 40), titlefont, (255, 255, 0))
 
     def predict(self):
+        """
+        Execute the prediction, save the results of said prediction and switch to the PredictResultScene()
+        """
         movie = data.update_movie(self.ui['search'].outputtable.get_selected().id, ['main'])
         cast = movie.cast[:10]
         wp = WeightedPattern(len(cast))
@@ -108,6 +166,9 @@ class PredictorScene(Scene):
 
 
 class PValueScene(Scene):
+    """
+    The scene where the user can select actors to calculate the p-value of that set of actors
+    """
     def __init__(self):
         super().__init__()
         self.ui = {
@@ -130,11 +191,18 @@ class PValueScene(Scene):
         text(surface, self.error, (70, 160), regularfont, (255, 255, 0))
 
     def take(self):
+        """
+        Move an actor selected in the search box to the left table
+        """
         entry = self.ui['search'].outputtable.get_selected()
         if entry is not None:
             self.ui['table'].add_entry(entry)
 
     def calculate(self):
+        """
+        Execute the calculation of the p-value and switch to the PValueResultScene()
+        :return:
+        """
         entries = self.ui['table'].entries
         if len(entries) < 8:
             self.error = ""
@@ -148,6 +216,9 @@ class PValueScene(Scene):
 
 
 class RateScene(Scene):
+    """
+    The scene where the user can select actors and apply ratings to them
+    """
     def __init__(self):
         super().__init__()
         self.ui = {
@@ -165,6 +236,9 @@ class RateScene(Scene):
         text(surface, "Rate People", (40, 40), titlefont, (255, 255, 0))
 
     def rate(self):
+        """
+        Switch to an ApplyRateScene() to apply a rating to the actor selected in the search box
+        """
         entry = self.ui['search'].outputtable.get_selected()
         if entry is not None:
             self.director.switch(ApplyRateScene(entry, self))
@@ -172,6 +246,9 @@ class RateScene(Scene):
 
 # Overlay scenes
 class PredictResultScene(Scene):
+    """
+    The scene that presents the results of a movie prediction, and queries the user to rate the movie
+    """
     def __init__(self, entry, cast, result, background):
         super().__init__()
         self.entry = entry
@@ -216,6 +293,9 @@ class PredictResultScene(Scene):
             surface.blit(element.render(), element.rect.topleft)
 
     def apply(self):
+        """
+        Gets the rating from the text box and, if valid, saves the rating to the csv files
+        """
         score = self.ui['text'].get_text()
         try:
             rating = float(score)
@@ -238,6 +318,9 @@ class PredictResultScene(Scene):
 
 
 class PValueResultScene(Scene):
+    """
+    The scene that presents the results of the p-value calculation
+    """
     def __init__(self, result, background):
         super().__init__()
         self.result = result
@@ -277,6 +360,9 @@ class PValueResultScene(Scene):
 
 
 class ApplyRateScene(Scene):
+    """
+    The scene where the user can apply a rating to a selected actor
+    """
     def __init__(self, entry, background):
         super().__init__()
         self.entry = entry
@@ -322,6 +408,9 @@ class ApplyRateScene(Scene):
             surface.blit(element.render(), element.rect.topleft)
 
     def apply(self):
+        """
+        Gets the rating from the text box and, if valid, saves the rating to the csv files
+        """
         score = self.ui['text'].get_text()
         try:
             rating = float(score)
@@ -338,6 +427,9 @@ class ApplyRateScene(Scene):
 
 
 class InfoScene(Scene):
+    """
+    Displays information on a given movie or actor
+    """
     def __init__(self, entry, background):
         super().__init__()
         self.entry = data.update_movie(entry.id, ['main']) if isinstance(entry, data.Movie) else data.update_person(entry.id, ['main'])
@@ -392,7 +484,10 @@ class InfoScene(Scene):
             surface.blit(element.render(), element.rect.topleft)
 
 
-class Fader(Scene):                         # Handles fading in and out between scenes
+class Fader(Scene):
+    """
+    A transition scene that handles the fade when transitioning from one scene to another
+    """
     def __init__(self, previous, next):
         super().__init__()
         self.current = previous     # The previous scene
